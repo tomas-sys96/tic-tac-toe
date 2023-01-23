@@ -141,38 +141,31 @@ class TicTacToe:
 
     def update_symbols_data(self, symbols_data: dict, symbol_number: int, row_index: int, row: list, column_index: int, value: str, player: Player, enemy_player: Player) -> dict:
         current_position_data = self.get_data_for_position(row, column_index, value, player, enemy_player)
-        total_symbols_count = current_position_data.compute_total_count()
-        if total_symbols_count != 0:
-            symbols_data[symbol_number] = {
-                "position": (row_index, column_index),
-                "count": {
-                    "row": current_position_data.row_symbols_count,
-                    "column": current_position_data.column_symbols_count,
-                    "left_to_right_diag": current_position_data.left_to_right_diag_symbols_count,
-                    "right_to_left_diag": current_position_data.right_to_left_diag_symbols_count
-                }
+        symbols_data[symbol_number] = {
+            "position": (row_index, column_index),
+            "count": {
+                "row": current_position_data.row_symbols_count,
+                "column": current_position_data.column_symbols_count,
+                "left_to_right_diag": current_position_data.left_to_right_diag_symbols_count,
+                "right_to_left_diag": current_position_data.right_to_left_diag_symbols_count
             }
+        }
         return symbols_data
 
     @dataclass
-    class SymbolsDataManager:
+    class DirectionsCount:
         row_symbols_count: int
         column_symbols_count: int
         left_to_right_diag_symbols_count: int
         right_to_left_diag_symbols_count: int
 
-        def compute_total_count(self) -> int:
-            total_symbols_count = self.row_symbols_count + self.column_symbols_count + self.left_to_right_diag_symbols_count + self.right_to_left_diag_symbols_count
-            return total_symbols_count
-
-    def get_data_for_position(self, row: list, column_index: int, value: str, player: Player, enemy_player: Player) -> SymbolsDataManager:
-        symbols_data_manager = self.SymbolsDataManager(0, 0, 0, 0)
-        symbols_data_manager.row_symbols_count = self.get_row_symbols_count(row, value, enemy_player)
-        symbols_data_manager.column_symbols_count = self.get_column_symbols_count(column_index, player, enemy_player)
-        symbols_data_manager.left_to_right_diag_symbols_count = self.get_diagonal_symbols_count(True, player, enemy_player)
-        symbols_data_manager.right_to_left_diag_symbols_count = self.get_diagonal_symbols_count(False, player, enemy_player)
-        symbols_data_manager.compute_total_count()
-        return symbols_data_manager
+    def get_data_for_position(self, row: list, column_index: int, value: str, player: Player, enemy_player: Player) -> DirectionsCount:
+        directions_count = self.DirectionsCount(0, 0, 0, 0)
+        directions_count.row_symbols_count = self.get_row_symbols_count(row, value, enemy_player)
+        directions_count.column_symbols_count = self.get_column_symbols_count(column_index, player, enemy_player)
+        directions_count.left_to_right_diag_symbols_count = self.get_diagonal_symbols_count(True, player, enemy_player)
+        directions_count.right_to_left_diag_symbols_count = self.get_diagonal_symbols_count(False, player, enemy_player)
+        return directions_count
 
     def get_row_symbols_count(self, row: list, value: str, enemy_player: Player) -> int:
         row_enemy_symbols_count = row.count(enemy_player.symbol)
@@ -225,22 +218,6 @@ class TicTacToe:
         else:
             return diagonal_symbols_count.right_to_left
 
-    def get_random_symbol(self, computer_symbols: dict) -> dict:
-        random_key = random.choice(list(computer_symbols.keys()))
-        chosen_symbol = computer_symbols[random_key]
-        return chosen_symbol
-
-    def get_random_direction(self, chosen_symbol: dict) -> str:
-        viable_directions = []
-        for direction_name, direction_value in chosen_symbol["count"].items():
-            if direction_value == 2:
-                chosen_direction = direction_name
-                return chosen_direction
-            elif direction_value == 1:
-                viable_directions.append(direction_name)
-        chosen_direction = random.choice(viable_directions)
-        return chosen_direction
-
     def get_random_position(self, chosen_symbol: dict, chosen_direction: str):
         if chosen_direction == "row":
             self.row_number = chosen_symbol["position"][0]
@@ -253,7 +230,7 @@ class TicTacToe:
             while self.game_board[self.row_number][self.column_number] != "_":
                 self.row_number = random.choice(list(range(3)))
         elif chosen_direction == "left_to_right_diag":
-            diagonal_positions = [[0, 0], [2, 2], [3, 3]]
+            diagonal_positions = [[0, 0], [1, 1], [2, 2]]
             self.row_number = chosen_symbol["position"][0]
             self.column_number = chosen_symbol["position"][1]
             while self.game_board[self.row_number][self.column_number] != "_":
@@ -272,47 +249,63 @@ class TicTacToe:
     def place_symbol(self, player: Player):
         self.game_board[self.row_number][self.column_number] = player.symbol
 
+    @dataclass
+    class DirectionPicker:
+        chosen_symbol: dict
+        chosen_direction: str
+
+        def pick_random_symbol(self, computer_symbols: dict):
+            random_key = random.choice(list(computer_symbols.keys()))
+            self.chosen_symbol = computer_symbols[random_key]
+
+        def pick_random_direction(self):
+            viable_directions = []
+            for direction_name, direction_value in self.chosen_symbol["count"].items():
+                if direction_value != 0:
+                    viable_directions.append(direction_name)
+            self.chosen_direction = random.choice(viable_directions)
+
     def computers_turn(self):
         # If going first, pick a random position to place the symbol at
         if self.current_turn in [1, 2]:
-            while True:
-                self.row_number = random.choice(list(range(3)))
-                self.column_number = random.choice(list(range(3)))
-                if self.game_board[self.row_number][self.column_number] == "_":
-                    break
-                else:
-                    pass
+            self.pick_first_position()
         else:
-            player_symbols = self.get_symbols_data(self.player1)
+            human_symbols = self.get_symbols_data(self.player1)
             computer_symbols = self.get_symbols_data(self.player2)
-            chosen_symbol = None
-            chosen_direction = None
+
             # Check if the computer is only one step away from winning
             # If not, look out for an imminent threat that the enemy player's symbols' placement poses
-            for symbols_data in [computer_symbols, player_symbols]:
-                for symbol in symbols_data:
-                    for dir_key, dir_value in symbols_data[symbol]["count"].items():
-                        if dir_value == 2:
-                            chosen_symbol = symbols_data[symbol]
-                            chosen_direction = dir_key
-                            break
-                    else:
-                        continue
-                    break
-                else:
-                    continue
-                break
-            # If none of the above-mentioned scenarios occur, pick a random symbol
-            if chosen_symbol is None:
-                chosen_symbol = self.get_random_symbol(computer_symbols)
-                chosen_direction = self.get_random_direction(chosen_symbol)
+            direction_picker = self.DirectionPicker({}, "")
+            if self.is_anyone_close_to_win(computer_symbols, human_symbols, direction_picker):
+                pass
+            else:
+                direction_picker.pick_random_symbol(computer_symbols)
+                direction_picker.pick_random_direction()
             # Pick a random position in the chosen direction
-            self.get_random_position(chosen_symbol, chosen_direction)
+            self.get_random_position(direction_picker.chosen_symbol, direction_picker.chosen_direction)
 
         # Place a symbol
         print("Computer is thinking...")
         time.sleep(2)
         self.place_symbol(self.current_player)
+
+    def pick_first_position(self):
+        while True:
+            self.row_number = random.choice(list(range(3)))
+            self.column_number = random.choice(list(range(3)))
+            if self.game_board[self.row_number][self.column_number] == "_":
+                break
+
+    def is_anyone_close_to_win(self, computer_symbols: dict, human_symbols: dict, direction_picker: DirectionPicker) -> bool:
+        for symbols_data in [computer_symbols, human_symbols]:
+            for symbol in symbols_data:
+                for direction_name, direction_value in symbols_data[symbol]["count"].items():
+                    if direction_value == 2:
+                        direction_picker.chosen_symbol = symbols_data[symbol]
+                        direction_picker.chosen_direction = direction_name
+                        print(direction_picker.chosen_direction)
+                        return True
+        return False
 
     def is_win(self):
         # Horizontal check
