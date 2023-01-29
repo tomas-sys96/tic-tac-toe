@@ -243,32 +243,6 @@ class ComputerPlayer(Player):
                         return True
         return False
 
-    # def _get_viable_position(self, direction_picker: DirectionPicker, symbols_data: dict, game):
-    #     try:
-    #         # Pick a random viable direction in which to place a symbol
-    #         direction_picker.choose_symbol(symbols_data)
-    #         direction_picker.choose_direction()
-    #     except IndexError:
-    #         # If there are no viable directions for the chosen symbol, loop through all the symbols
-    #         self._loop_for_viable_position(symbols_data, direction_picker)
-    #     finally:
-    #         row_number, column_number = self._get_next_position(game, direction_picker.chosen_symbol,
-    #                                                             direction_picker.chosen_direction)
-    #     return row_number, column_number
-    #
-    # @staticmethod
-    # def _loop_for_viable_position(symbols_data: dict, direction_picker: DirectionPicker):
-    #     for symbol in symbols_data:
-    #         direction_picker.chosen_symbol = symbol
-    #         try:
-    #             direction_picker.choose_direction()
-    #         except IndexError:
-    #             # If no viable directions yet, try another symbol
-    #             continue
-    #         else:
-    #             # If there's a symbol with at least one viable direction, skip the rest of the loop
-    #             return
-
     @staticmethod
     def _is_any_viable_direction(symbols_data: dict) -> bool:
         for symbol in symbols_data:
