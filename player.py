@@ -81,50 +81,50 @@ class ComputerPlayer(Player):
         super().__init__(name, symbol)
 
     def make_move(self, game, player1: Player, player2: Player) -> tuple:
-        friendly_symbols = self.get_symbols_data(game, player1, player2, True)
-        enemy_symbols = self.get_symbols_data(game, player1, player2, False)
+        friendly_symbols = self._get_symbols_data(game, player1, player2, True)
+        enemy_symbols = self._get_symbols_data(game, player1, player2, False)
 
         direction_picker = DirectionPicker({}, "")
 
         # If the friendly player is close to win, place the final symbol to complete a streak
         # If the enemy player is close to win, spoil it for them
-        if self.is_close_to_win(friendly_symbols, enemy_symbols, direction_picker):
-            row_number, column_number = self.get_next_position(game, direction_picker.chosen_symbol,
-                                                               direction_picker.chosen_direction)
-        elif (not friendly_symbols and not enemy_symbols) or not self.is_any_viable_direction(friendly_symbols) \
-                or not self.is_any_viable_direction(enemy_symbols):
+        if self._is_close_to_win(friendly_symbols, enemy_symbols, direction_picker):
+            row_number, column_number = self._get_next_position(game, direction_picker.chosen_symbol,
+                                                                direction_picker.chosen_direction)
+        elif (not friendly_symbols and not enemy_symbols) or (not self._is_any_viable_direction(friendly_symbols)
+                                                              and not self._is_any_viable_direction(enemy_symbols)):
             # If going first or if there's no way to win, pick a random empty square to place the symbol
-            row_number, column_number = self.get_random_empty_square(game)
+            row_number, column_number = self._get_random_empty_position(game)
         elif friendly_symbols:
             # Place a symbol based upon the position of an already existing friendly symbol
-            row_number, column_number = self.get_viable_square(direction_picker, friendly_symbols, game)
+            row_number, column_number = self._get_viable_position(direction_picker, friendly_symbols, game)
         else:
             # If going second, there's no friendly symbols data available at the start of the turn
             # -> try clause gives an error
             # Therefore, place a symbol based upon the position of the enemy symbol
-            row_number, column_number = self.get_viable_square(direction_picker, enemy_symbols, game)
+            row_number, column_number = self._get_viable_position(direction_picker, enemy_symbols, game)
 
         print("Computer is thinking...")
         time.sleep(2)
         game.place_symbol(row_number, column_number)
         return row_number, column_number
 
-    def get_symbols_data(self, game, player1: Player, player2: Player, friendly_player: bool) -> dict:
-        player = self.choose_friendly_player(game, friendly_player, player1, player2)
-        enemy_player = self.choose_enemy_player(player, player1, player2)
+    def _get_symbols_data(self, game, player1: Player, player2: Player, friendly_player: bool) -> dict:
+        player = self._choose_friendly_player(game, friendly_player, player1, player2)
+        enemy_player = self._choose_enemy_player(player, player1, player2)
 
         symbols_data = {}
         symbol_number = 0
         for row_index, row in enumerate(game.board):
             for column_index, value in enumerate(row):
                 if value == player.symbol:
-                    symbols_data = self.update_symbols_data(game, symbols_data, symbol_number, row_index, column_index,
-                                                            player, enemy_player)
+                    symbols_data = self._update_symbols_data(game, symbols_data, symbol_number, row_index, column_index,
+                                                             player, enemy_player)
                     symbol_number += 1
         return symbols_data
 
     @staticmethod
-    def choose_friendly_player(game, friendly_player: bool, player1: Player, player2: Player) -> Player:
+    def _choose_friendly_player(game, friendly_player: bool, player1: Player, player2: Player) -> Player:
         if friendly_player:
             player = game.current_player
         else:
@@ -135,16 +135,16 @@ class ComputerPlayer(Player):
         return player
 
     @staticmethod
-    def choose_enemy_player(player: Player, player1: Player, player2: Player) -> Player:
+    def _choose_enemy_player(player: Player, player1: Player, player2: Player) -> Player:
         if player == player1:
             enemy_player = player2
         else:
             enemy_player = player1
         return enemy_player
 
-    def update_symbols_data(self, game, symbols_data: dict, symbol_number: int, row_index: int, column_index: int,
-                            player: Player, enemy_player: Player) -> dict:
-        current_position_data = self.get_data_for_position(game, row_index, column_index, player, enemy_player)
+    def _update_symbols_data(self, game, symbols_data: dict, symbol_number: int, row_index: int, column_index: int,
+                             player: Player, enemy_player: Player) -> dict:
+        current_position_data = self._get_data_for_position(game, row_index, column_index, player, enemy_player)
         symbols_data[symbol_number] = {
             "position": (row_index, column_index),
             "count": {
@@ -156,19 +156,19 @@ class ComputerPlayer(Player):
         }
         return symbols_data
 
-    def get_data_for_position(self, game, row_index: int, column_index: int, player: Player, enemy_player: Player) \
+    def _get_data_for_position(self, game, row_index: int, column_index: int, player: Player, enemy_player: Player) \
             -> DirectionsCount:
         directions_count = DirectionsCount(0, 0, 0, 0)
-        directions_count.row_symbols_count = self.get_row_symbols_count(game, row_index, player, enemy_player)
-        directions_count.column_symbols_count = self.get_column_symbols_count(game, column_index, player, enemy_player)
-        directions_count.left_to_right_diagonal_symbols_count = self.get_diagonal_symbols_count(game, True, player,
-                                                                                                enemy_player)
-        directions_count.right_to_left_diagonal_symbols_count = self.get_diagonal_symbols_count(game, False, player,
-                                                                                                enemy_player)
+        directions_count.row_symbols_count = self._get_row_symbols_count(game, row_index, player, enemy_player)
+        directions_count.column_symbols_count = self._get_column_symbols_count(game, column_index, player, enemy_player)
+        directions_count.left_to_right_diagonal_symbols_count = self._get_diagonal_symbols_count(game, True, player,
+                                                                                                 enemy_player)
+        directions_count.right_to_left_diagonal_symbols_count = self._get_diagonal_symbols_count(game, False, player,
+                                                                                                 enemy_player)
         return directions_count
 
     @staticmethod
-    def get_row_symbols_count(game, row_index: int, player: Player, enemy_player: Player) -> int:
+    def _get_row_symbols_count(game, row_index: int, player: Player, enemy_player: Player) -> int:
         row_enemy_symbols_count = game.board[row_index].count(enemy_player.symbol)
         if row_enemy_symbols_count > 0:
             row_symbols_count = 0
@@ -177,7 +177,7 @@ class ComputerPlayer(Player):
         return row_symbols_count
 
     @staticmethod
-    def get_column_symbols_count(game, column_index: int, player: Player, enemy_player: Player) -> int:
+    def _get_column_symbols_count(game, column_index: int, player: Player, enemy_player: Player) -> int:
         column_symbols_count = 0
         for row in game.board:
             if row[column_index] == enemy_player.symbol:
@@ -188,7 +188,7 @@ class ComputerPlayer(Player):
         return column_symbols_count
 
     @staticmethod
-    def get_diagonal_symbols_count(game, left_to_right: bool, player: Player, enemy_player: Player) -> int:
+    def _get_diagonal_symbols_count(game, left_to_right: bool, player: Player, enemy_player: Player) -> int:
         sign = 1 if left_to_right else -1
         column = 0 if left_to_right else 2
         diagonal_symbols_count = DiagonalSymbolsCount(0, 0)
@@ -205,7 +205,7 @@ class ComputerPlayer(Player):
             return diagonal_symbols_count.right_to_left
 
     @staticmethod
-    def get_next_position(game, chosen_symbol: dict, chosen_direction: str) -> tuple:
+    def _get_next_position(game, chosen_symbol: dict, chosen_direction: str) -> tuple:
         row_number, column_number = chosen_symbol["position"]
         if chosen_direction == "row":
             while game.board[row_number][column_number] != " ":
@@ -228,7 +228,7 @@ class ComputerPlayer(Player):
         return row_number, column_number
 
     @staticmethod
-    def is_close_to_win(friendly_symbols: dict, enemy_symbols: dict, direction_picker: DirectionPicker) -> bool:
+    def _is_close_to_win(friendly_symbols: dict, enemy_symbols: dict, direction_picker: DirectionPicker) -> bool:
         for symbols_data in [friendly_symbols, enemy_symbols]:
             for symbol in symbols_data:
                 for direction_name, direction_value in symbols_data[symbol]["count"].items():
@@ -238,21 +238,21 @@ class ComputerPlayer(Player):
                         return True
         return False
 
-    def get_viable_square(self, direction_picker: DirectionPicker, symbols_data: dict, game):
+    def _get_viable_position(self, direction_picker: DirectionPicker, symbols_data: dict, game):
         try:
             # Pick a random viable direction in which to place a symbol
             direction_picker.choose_symbol(symbols_data)
             direction_picker.choose_direction()
         except IndexError:
             # If there are no viable directions for the chosen symbol, loop through all the symbols
-            self.loop_through_symbols(symbols_data, direction_picker)
+            self._loop_for_viable_position(symbols_data, direction_picker)
         finally:
-            row_number, column_number = self.get_next_position(game, direction_picker.chosen_symbol,
-                                                               direction_picker.chosen_direction)
+            row_number, column_number = self._get_next_position(game, direction_picker.chosen_symbol,
+                                                                direction_picker.chosen_direction)
         return row_number, column_number
 
     @staticmethod
-    def loop_through_symbols(symbols_data: dict, direction_picker: DirectionPicker):
+    def _loop_for_viable_position(symbols_data: dict, direction_picker: DirectionPicker):
         for symbol in symbols_data:
             direction_picker.chosen_symbol = symbol
             try:
@@ -265,7 +265,7 @@ class ComputerPlayer(Player):
                 return
 
     @staticmethod
-    def is_any_viable_direction(symbols_data: dict) -> bool:
+    def _is_any_viable_direction(symbols_data: dict) -> bool:
         for symbol in symbols_data:
             for direction_value in symbols_data[symbol]["count"].values():
                 if direction_value != 0:
@@ -273,7 +273,7 @@ class ComputerPlayer(Player):
         return False
 
     @staticmethod
-    def get_random_empty_square(game) -> tuple:
+    def _get_random_empty_position(game) -> tuple:
         empty_positions = []
         for row_index, row in enumerate(game.board):
             for column_index, value in enumerate(row):
