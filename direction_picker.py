@@ -11,6 +11,13 @@ class DirectionPicker:
         random_key = random.choice(list(symbols_data.keys()))
         self.chosen_symbol = symbols_data[random_key]
 
+    def choose_direction(self):
+        viable_directions = []
+        for direction_name, direction_value in self.chosen_symbol["count"].items():
+            if direction_value != 0:
+                viable_directions.append(direction_name)
+        self.chosen_direction = random.choice(viable_directions)
+
     def get_viable_position(self, symbols_data: dict):
         try:
             # Pick a random viable direction in which to place a symbol
@@ -32,10 +39,3 @@ class DirectionPicker:
             else:
                 # If there's a symbol with at least one viable direction, skip the rest of the loop
                 return
-
-    def choose_direction(self):
-        viable_directions = []
-        for direction_name, direction_value in self.chosen_symbol["count"].items():
-            if direction_value != 0:
-                viable_directions.append(direction_name)
-        self.chosen_direction = random.choice(viable_directions)

@@ -44,8 +44,8 @@ class HumanPlayer(Player):
 
     @staticmethod
     def _enter_position() -> tuple:
-        row_number = input("Enter the row's number (1-3): ")
-        column_number = input("Enter the column's number (1-3): ")
+        row_number = input("Enter the row's number: ")
+        column_number = input("Enter the column's number: ")
         return row_number, column_number
 
     @staticmethod
@@ -95,13 +95,14 @@ class ComputerPlayer(Player):
                                                               and not self._is_any_viable_direction(enemy_symbols)):
             # If going first or if there's no way to win, pick a random empty square to place the symbol
             row_number, column_number = self._get_random_empty_position(game)
-        elif friendly_symbols:
-            # Place a symbol based upon the position of an already existing friendly symbol
+        elif friendly_symbols and self._is_any_viable_direction(friendly_symbols):
+            # Place a symbol based upon the position of an already existing friendly symbol, if there are any
+            # viable directions
             direction_picker.get_viable_position(friendly_symbols)
             row_number, column_number = self._get_next_position(game, direction_picker.chosen_symbol,
                                                                 direction_picker.chosen_direction)
         else:
-            # If going second, there's no friendly symbols data available at the start of the turn
+            # If going second, there are no friendly symbols data available at the start of the turn
             # -> try clause gives an error
             # Therefore, place a symbol based upon the position of the enemy symbol
             direction_picker.get_viable_position(enemy_symbols)

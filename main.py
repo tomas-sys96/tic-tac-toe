@@ -23,12 +23,12 @@ def select_game_mode() -> str:
 def create_players(chosen_game_mode: str) -> tuple:
     if chosen_game_mode == "c":
         player1_name = enter_name("Your name: ")
-        player2 = ComputerPlayer("Computer", "O")
+        player2 = ComputerPlayer("Computer", "o")
     else:
         player1_name = enter_name("First player's name: ")
         player2_name = enter_name("Second player's name: ")
-        player2 = HumanPlayer(player2_name, "O")
-    player1 = HumanPlayer(player1_name, "X")
+        player2 = HumanPlayer(player2_name, "o")
+    player1 = HumanPlayer(player1_name, "x")
     return player1, player2
 
 
@@ -39,12 +39,12 @@ def enter_name(description: str) -> str:
 
 def show_board(game: TicTacToe):
     print("")
+    print("    " + "   ".join(["1", "2", "3"]) + "  ")
     for row_index, row in enumerate(game.board):
-        print(" ", end="")
-        print(*row, sep=" | ", end="")
-        print(" ")
-        if row_index != len(game.board) - 1:
-            print(11 * "-")
+        print("  " + 13 * "-")
+        print(str(row_index + 1) + " | " + " | ".join(row) + " |")
+        if row_index == len(game.board) - 1:
+            print("  " + 13 * "-")
     print("")
 
 
