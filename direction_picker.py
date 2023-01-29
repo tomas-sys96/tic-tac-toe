@@ -11,7 +11,7 @@ class DirectionPicker:
         random_key = random.choice(list(symbols_data.keys()))
         self.chosen_symbol = symbols_data[random_key]
 
-    def _get_viable_position(self, symbols_data: dict, game):
+    def get_viable_position(self, symbols_data: dict):
         try:
             # Pick a random viable direction in which to place a symbol
             self.choose_symbol(symbols_data)
