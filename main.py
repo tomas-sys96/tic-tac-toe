@@ -20,7 +20,7 @@ def select_game_mode() -> str:
             return friend_or_computer
 
 
-def instantiate_players(chosen_game_mode: str):
+def instantiate_players(chosen_game_mode: str) -> tuple:
     if chosen_game_mode == "c":
         player1_name = enter_name("Your name: ")
         player2 = ComputerPlayer("Computer", "O")
@@ -76,9 +76,12 @@ def main():
         if turn_win or turn_draw:
             show_current_score(player1, player2)
             while True:
-                another_game = input("Would you like to play another round? Type yes (y) or no (n). ").lower()
+                another_game = input("Would you like to play another round?\n"
+                                     "Type yes (y) or no (n).\n").lower()
+                print("")
                 if another_game == "y":
                     game.start_new_game(player1, player2)
+                    game.show_board()
                     break
                 elif another_game == "n":
                     is_game_over = True

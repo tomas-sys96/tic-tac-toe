@@ -1,4 +1,5 @@
 import random
+
 from player import Player
 
 
@@ -64,11 +65,11 @@ class TicTacToe:
         for row in self.board:
             if row[column] == self.current_player.symbol:
                 diagonal_count += 1
-            column *= sign
+            column += sign
         if diagonal_count == 3:
             return True
 
-    def is_draw(self):
+    def is_draw(self) -> bool:
         empty_squares = 0
         for row in self.board:
             empty_squares += row.count(" ")

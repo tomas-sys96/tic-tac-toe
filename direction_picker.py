@@ -7,9 +7,9 @@ class DirectionPicker:
     chosen_symbol: dict
     chosen_direction: str
 
-    def choose_symbol(self, computer_symbols: dict):
-        random_key = random.choice(list(computer_symbols.keys()))
-        self.chosen_symbol = computer_symbols[random_key]
+    def choose_symbol(self, symbols_data: dict):
+        random_key = random.choice(list(symbols_data.keys()))
+        self.chosen_symbol = symbols_data[random_key]
 
     def choose_direction(self):
         viable_directions = []
